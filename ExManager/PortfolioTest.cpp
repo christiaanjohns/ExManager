@@ -3,14 +3,25 @@
 
 using namespace ::testing;
 using namespace std;
+using namespace boost::gregorian;
 
-class APortfolio: public Test {
+class APortfolio: public Test
+{
 public:
+    static const date ArbitraryDate;
     static const string IBM;
     static const string SAMSUNG;
     Portfolio portfolio_;
+
+    void Purchase(const string& symbol, unsigned int shareCount,
+            const date& transactionDate = APortfolio::ArbitraryDate)
+    {
+        portfolio_.Purchase(symbol, shareCount, transactionDate);
+    };
+
 };
 
+const date APortfolio::ArbitraryDate(2018, Dec, 1);
 const string APortfolio::IBM("IBM");
 const string APortfolio::SAMSUNG("SSNLF");
 
@@ -54,7 +65,7 @@ TEST_F(APortfolio, ShareCountReflectsAccumulatedPurchaseOfSameSymbol)
 }
 TEST_F(APortfolio, ReduceShareCountOfSymbolsOnSell)
 {
-    portfolio_.Purchase(SAMSUNG, 30);
+    Purchase(SAMSUNG, 30);
     portfolio_.Sell(SAMSUNG, 13);
 
     ASSERT_THAT(portfolio_.ShareCount(SAMSUNG), Eq(30u-13));
@@ -65,11 +76,12 @@ TEST_F(APortfolio, ThrowsWhenSellingMoreSharesThanPurchased)
 }
 TEST_F(APortfolio, AnswersThePurchaseRecordsForASinglePurchase)
 {
-    portfolio_.Purchase(SAMSUNG, 5);
+    date dateOfPurchase(2018, Nov, 22);
+    Purchase(SAMSUNG, 5, dateOfPurchase);
 
     auto purchases = portfolio_.Purchases(SAMSUNG);
     auto purchase = purchases[0];
 
     ASSERT_THAT(purchase.ShareCount, Eq(5));
-    ASSERT_THAT(purchase.Date, Eq(Portfolio::FIXED_PURCHASE_DATE));
+    ASSERT_THAT(purchase.Date, Eq(dateOfPurchase));
 }
